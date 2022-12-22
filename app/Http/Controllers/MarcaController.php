@@ -21,7 +21,7 @@ class MarcaController extends Controller
     {
         //$marcas = Marca::all();
         $marcas = $this->marca->all();
-        return $marcas;
+        return response()->json($marcas, 200);
     }
 
     /**
@@ -33,8 +33,9 @@ class MarcaController extends Controller
     public function store(Request $request)
     {
         //$marca = Marca::create($request->all());
+        $request->validate($this->marca->rules(), $this->marca->feedback());
         $marca = $this->marca->create($request->all());
-        return $marca;
+        return response()->json($marca, 201);
     }
 
     /**
@@ -46,7 +47,11 @@ class MarcaController extends Controller
     public function show($id)
     {
         $marca = $this->marca->find($id);
-        return $marca;
+        if($marca === null)
+        {
+            return response()->json(['error' => 'Recursos pesquisado não existe'], 404);
+        }
+        return response()->json($marca, 200);
     }
 
     /**
@@ -60,8 +65,27 @@ class MarcaController extends Controller
     {
         //$marca->update($request->all());
         $marca = $this->marca->find($id);
+        if($marca === null)
+        {
+            return response()->json(['erro' => 'Impossível realizar essa atualização. O recurso solicitado não existe'], 404);
+        }
+        if ($request->method() === 'PATCH')
+        {
+            $regrasDinamicas = [];
+
+            foreach($marca->rules() as $input => $regra) {
+                if (array_key_exists($input, $request->all())) {
+                    $regrasDinamicas[$input] = $regra;
+                }
+            }
+            $request->validate($regrasDinamicas, $this->marca->feedback());
+            $marca->update($request->all());
+            return response()->json($marca, 200);
+        }
+        $request->validate($this->marca->rules(), $this->marca->feedback());
         $marca->update($request->all());
-        return $marca;
+        return response()->json($marca, 200);
+
     }
 
     /**
@@ -74,7 +98,11 @@ class MarcaController extends Controller
     {
         //$marca->delete();
         $marca = $this->marca->find($id);
+        if($marca === null)
+        {
+            return response()->json(['erro' => 'Impossível realizar essa remoção. O recurso solicitado não existe'], 404);
+        }
         $marca->delete();
-        return ['msg' => 'Marca deletada com sucesso!'];
+        return response()->json(['msg' => 'Marca deletada com sucesso!'], 200);
     }
 }
