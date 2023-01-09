@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Marca;
+use App\Repositories\MarcaRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Type\Integer;
@@ -20,11 +21,26 @@ class MarcaController extends Controller
      */
     public function index(Request $request)
     {
+        $marcaRepository = new MarcaRepository($this->marca);
+
+        if ($request->has('atributos_modelo'))
+        {
+            $atributos_modelos =  'modelos:id,'. $request->atributos_modelo;
+            $marcaRepository->selectAtribrutosRegistrosRelacionados($atributos_modelos);
+        }else{
+            $marcaRepository->selectAtribrutosRegistrosRelacionados('modelos');
+        }
+
+        if ($request->has('filtro'))
+        {
+            $marcaRepository->filtros($request->filtro);
+        }
+
         if ($request->has('atributos'))
         {
-            return $this->marca->selectRaw($request->atributos)->with('modelos')->get();
+            $marcaRepository->selectAtributos($request->atributos);
         }
-        return response()->json($this->marca->with('modelos')->get(), 200);
+        return response()->json($marcaRepository->getResultado(), 200);
     }
 
     /**
