@@ -7,7 +7,7 @@
 
                     <div class="card-body">
                         <form method="POST" action="" @submit.prevent="login($event)">
-                            <input type="hidden" name="_token" :value="csrf_token">
+                            <input type="hidden" name="_token" :value="toke_csrf">
                             <div class="row mb-3">
                                 <label for="email" class="col-md-4 col-form-label text-md-end">Email</label>
 
@@ -64,7 +64,7 @@
 <script>
 export default {
     props: [
-        'csrf_token'
+        'toke_csrf'
     ],
     data(){
         return {
@@ -85,12 +85,11 @@ export default {
             fetch(url, configuracao)
                 .then(response => response.json())
                 .then(data => {
-                    if(data.token){
-                        document.cookie = 'token='+data.token+';SameSite=Lax'
+                    if(data.Token){
+                        document.cookie = 'token='+data.Token+';SameSite=Lax'
                     }
-
-                    event.target.submit()
                 })
+            event.target.submit()
         }
     }
 }
