@@ -1,6 +1,16 @@
 <template>
     <div :class="estilo" role="alert">
-        Marca cadastrada com sucesso!
+        {{ titulo }}
+        <hr>
+
+        <p>{{ detalhes.message }}</p>
+        <br>
+
+        <ul v-if="detalhes.dados">
+            <li v-for="e, key in detalhes.dados" :key="key">
+                {{ e[0] }}
+            </li>
+        </ul>
     </div>
 </template>
 
@@ -11,6 +21,6 @@ export default {
             return 'alert alert-'+this.tipos
         }
     },
-    props: ['tipos']
+    props: ['tipos', 'titulo', 'detalhes']
 }
 </script>

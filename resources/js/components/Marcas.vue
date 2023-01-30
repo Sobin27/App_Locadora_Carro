@@ -27,7 +27,10 @@
                 <!----------------------------------------------------------------------------------------------->
                 <card-component titulo="Relação de Marcas">
                     <template v-slot:conteudo>
-                        <table-component></table-component>
+                        <table-component 
+                        :marcas="marcas"
+                        :titulos="['ID', 'Nome', 'Imagem']">
+                    </table-component>
                     </template>
 
                     <template v-slot:rodape>
@@ -39,8 +42,8 @@
 
         <modal-component id="modalMarca" titulo="Adicionar Marca">
             <template v-slot:alertas>
-                <alert-component tipo="success"></alert-component>
-                <alert-component tipo="danger"></alert-component>
+                <alert-component tipo="success" :detalhes="transacaoDetalhes" v-if="transacaoStatus === 'adicionado'" titulo="Marca cadastrada com sucesso!"></alert-component>
+                <alert-component tipo="danger" :detalhes="transacaoDetalhes" v-if="transacaoStatus === 'erro'" titulo="Erro ao tentar cadastrar a marca"></alert-component>
             </template>
 
             <template v-slot:conteudo>
@@ -85,11 +88,30 @@
             return {
                 urlBase: 'http://localhost:8000/api/v1/marca',
                 nomeMarca: '',
-                arquivoImagem: []
+                arquivoImagem: [],
+                transacaoStatus: '',
+                transacaoDetalhes: {},
+                marcas: []
             }
         },
 
         methods: {
+            carregarLista(){
+                let config = {
+                    headers:{
+                        'Accept': 'application/json',
+                        'Authorization': this.token
+                    }
+                }
+
+                axios.get(this.urlBase, config)
+                    .then(response =>{
+                        this.marcas = response.data
+                    })
+                    .catch(errors => {
+                        console.log(errors)
+                    })
+            },
             carregarImagem(e){
                 this.arquivoImagem = e.target.files
             },
@@ -109,12 +131,22 @@
 
                 axios.post(this.urlBase, formData, config)
                     .then(response => {
-                        console.log(response)
+                        this.transacaoStatus = 'adicionado'
+                        this.transacaoDetalhes = {
+                            mensagem: 'ID do registo: ' + response.data.id
+                        }
                     })
                     .catch(erros => {
-                        console.log(erros)
+                        this.transacaoStatus = 'erro'
+                        this.transacaoDetalhes = {
+                            mensagem: erros.response.message,
+                            dados: erros.response.data.errors
+                        }
                     })
             }
+        },
+        mounted(){
+            this.carregarLista()
         }
     }
 </script>

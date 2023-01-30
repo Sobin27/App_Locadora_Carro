@@ -5319,6 +5319,16 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   computed: {
@@ -5326,7 +5336,7 @@ __webpack_require__.r(__webpack_exports__);
       return 'alert alert-' + this.tipos;
     }
   },
-  props: ['tipos']
+  props: ['tipos', 'titulo', 'detalhes']
 });
 
 /***/ }),
@@ -5636,6 +5646,9 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   computed: {
@@ -5652,14 +5665,32 @@ __webpack_require__.r(__webpack_exports__);
     return {
       urlBase: 'http://localhost:8000/api/v1/marca',
       nomeMarca: '',
-      arquivoImagem: []
+      arquivoImagem: [],
+      transacaoStatus: '',
+      transacaoDetalhes: {},
+      marcas: []
     };
   },
   methods: {
+    carregarLista: function carregarLista() {
+      var _this = this;
+      var config = {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': this.token
+        }
+      };
+      axios.get(this.urlBase, config).then(function (response) {
+        _this.marcas = response.data;
+      })["catch"](function (errors) {
+        console.log(errors);
+      });
+    },
     carregarImagem: function carregarImagem(e) {
       this.arquivoImagem = e.target.files;
     },
     salvar: function salvar() {
+      var _this2 = this;
       var formData = new FormData();
       formData.append('nome', this.nomeMarca);
       formData.append('imagem', this.arquivoImagem[0]);
@@ -5671,11 +5702,21 @@ __webpack_require__.r(__webpack_exports__);
         }
       };
       axios.post(this.urlBase, formData, config).then(function (response) {
-        console.log(response);
+        _this2.transacaoStatus = 'adicionado';
+        _this2.transacaoDetalhes = {
+          mensagem: 'ID do registo: ' + response.data.id
+        };
       })["catch"](function (erros) {
-        console.log(erros);
+        _this2.transacaoStatus = 'erro';
+        _this2.transacaoDetalhes = {
+          mensagem: erros.response.message,
+          dados: erros.response.data.errors
+        };
       });
     }
+  },
+  mounted: function mounted() {
+    this.carregarLista();
   }
 });
 
@@ -5749,21 +5790,10 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  props: ['marcas', 'titulos']
+});
 
 /***/ }),
 
@@ -29175,7 +29205,24 @@ var render = function () {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { class: _vm.estilo, attrs: { role: "alert" } }, [
-    _vm._v("\n    Marca cadastrada com sucesso!\n"),
+    _vm._v("\n    " + _vm._s(_vm.titulo) + "\n    "),
+    _c("hr"),
+    _vm._v(" "),
+    _c("p", [_vm._v(_vm._s(_vm.detalhes.message))]),
+    _vm._v(" "),
+    _c("br"),
+    _vm._v(" "),
+    _vm.detalhes.dados
+      ? _c(
+          "ul",
+          _vm._l(_vm.detalhes.dados, function (e, key) {
+            return _c("li", { key: key }, [
+              _vm._v("\n            " + _vm._s(e[0]) + "\n        "),
+            ])
+          }),
+          0
+        )
+      : _vm._e(),
   ])
 }
 var staticRenderFns = []
@@ -29697,7 +29744,14 @@ var render = function () {
                 {
                   key: "conteudo",
                   fn: function () {
-                    return [_c("table-component")]
+                    return [
+                      _c("table-component", {
+                        attrs: {
+                          marcas: _vm.marcas,
+                          titulos: ["ID", "Nome", "Imagem"],
+                        },
+                      }),
+                    ]
                   },
                   proxy: true,
                 },
@@ -29735,9 +29789,25 @@ var render = function () {
             key: "alertas",
             fn: function () {
               return [
-                _c("alert-component", { attrs: { tipo: "success" } }),
+                _vm.transacaoStatus === "adicionado"
+                  ? _c("alert-component", {
+                      attrs: {
+                        tipo: "success",
+                        detalhes: _vm.transacaoDetalhes,
+                        titulo: "Marca cadastrada com sucesso!",
+                      },
+                    })
+                  : _vm._e(),
                 _vm._v(" "),
-                _c("alert-component", { attrs: { tipo: "danger" } }),
+                _vm.transacaoStatus === "erro"
+                  ? _c("alert-component", {
+                      attrs: {
+                        tipo: "danger",
+                        detalhes: _vm.transacaoDetalhes,
+                        titulo: "Erro ao tentar cadastrar a marca",
+                      },
+                    })
+                  : _vm._e(),
               ]
             },
             proxy: true,
@@ -29960,58 +30030,49 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c("div", [
+    _c(
+      "table",
+      { staticClass: "table table-hover" },
+      [
+        _c("thead", [
+          _c(
+            "tr",
+            _vm._l(_vm.titulos, function (t, key) {
+              return _c("th", { key: key, attrs: { scope: "col" } }, [
+                _vm._v(_vm._s(t)),
+              ])
+            }),
+            0
+          ),
+        ]),
+        _vm._v(" "),
+        _vm._l(_vm.marcas, function (m) {
+          return _c("tbody", { key: m.id }, [
+            _c("tr", [
+              _c("th", { attrs: { scope: "row" } }, [_vm._v(_vm._s(m.id))]),
+              _vm._v(" "),
+              _c("td", [_vm._v(_vm._s(m.nome))]),
+              _vm._v(" "),
+              _c("td", [
+                _c("img", {
+                  attrs: {
+                    src: "/storage/" + m.imagem,
+                    alt: "",
+                    width: "45",
+                    height: "45",
+                  },
+                }),
+              ]),
+            ]),
+          ])
+        }),
+      ],
+      2
+    ),
+  ])
 }
-var staticRenderFns = [
-  function () {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("table", { staticClass: "table table-hover" }, [
-      _c("thead", [
-        _c("tr", [
-          _c("th", { attrs: { scope: "col" } }, [_vm._v("#")]),
-          _vm._v(" "),
-          _c("th", { attrs: { scope: "col" } }, [_vm._v("First")]),
-          _vm._v(" "),
-          _c("th", { attrs: { scope: "col" } }, [_vm._v("Last")]),
-          _vm._v(" "),
-          _c("th", { attrs: { scope: "col" } }, [_vm._v("Handle")]),
-        ]),
-      ]),
-      _vm._v(" "),
-      _c("tbody", [
-        _c("tr", [
-          _c("th", { attrs: { scope: "row" } }, [_vm._v("1")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("Mark")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("Otto")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("@mdo")]),
-        ]),
-        _vm._v(" "),
-        _c("tr", [
-          _c("th", { attrs: { scope: "row" } }, [_vm._v("2")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("Jacob")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("Thornton")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("@fat")]),
-        ]),
-        _vm._v(" "),
-        _c("tr", [
-          _c("th", { attrs: { scope: "row" } }, [_vm._v("3")]),
-          _vm._v(" "),
-          _c("td", { attrs: { colspan: "2" } }, [_vm._v("Larry the Bird")]),
-          _vm._v(" "),
-          _c("td", [_vm._v("@twitter")]),
-        ]),
-      ]),
-    ])
-  },
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
