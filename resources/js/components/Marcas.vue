@@ -7,20 +7,20 @@
                         <div class="form-row">
                             <div class="col mb-3">
                                 <input-container-component titulo="ID" id="inputId" id-help="idhelp" texto-ajuda="Opcional. Informe o ID da marca">
-                                    <input type="number" class="form-control" id="inputId" aria-describedby="idHelp" placeholder="ID">
+                                    <input type="number" class="form-control" id="inputId" aria-describedby="idHelp" placeholder="ID" v-model="busca.id">
                                 </input-container-component>
                             </div>
 
                             <div class="col mb-3">
                                 <input-container-component titulo="Nome da Marca" id="inputNome" id-help="nomeHelp" texto-ajuda="Opcional. Informe o nome da marca">
-                                    <input type="text" class="form-control" id="inputNome" aria-describedby="nomeHelp" placeholder="Nome da Marca">
+                                    <input type="text" class="form-control" id="inputNome" aria-describedby="nomeHelp" placeholder="Nome da Marca" v-model="busca.nome">
                                 </input-container-component>
                             </div>
                         </div>
                     </template>
 
                     <template v-slot:rodape>
-                        <button type="submit" class="btn btn-primary btn-sm float-end">Pesquisar</button>
+                        <button type="submit" class="btn btn-primary btn-sm float-end" @click="pesquisar">Pesquisar</button>
                     </template>
 
                 </card-component>
@@ -29,6 +29,9 @@
                     <template v-slot:conteudo>
                         <table-component 
                         :marcas="marcas"
+                        :vizualizar="{ visivel: true, dataToggle: 'modal', dataTarget: '#modalMarcaVizualizar'}"
+                        :atualizar="true"
+                        :remover="true"
                         :titulos="['ID', 'Nome', 'Imagem']">
                     </table-component>
                     </template>
@@ -65,6 +68,28 @@
                 <button type="button" class="btn btn-primary" @click="salvar()">Salvar</button>
             </template>
         </modal-component>
+
+        
+        <modal-component id="modalMarcaVizualizar" titulo="Vizualizar Marca">
+            <template v-slot:alertas>
+
+            </template>
+
+            <template v-slot:conteudo>
+                <div class="form-group">
+
+                </div>
+
+                <div class="form-group">
+
+                </div>
+            </template>
+
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </template>
+        </modal-component>
+
     </div>
 </template>
 
@@ -87,11 +112,13 @@
         data(){
             return {
                 urlBase: 'http://localhost:8000/api/v1/marca',
+                urlFiltro: '',
                 nomeMarca: '',
                 arquivoImagem: [],
                 transacaoStatus: '',
                 transacaoDetalhes: {},
-                marcas: []
+                marcas: [],
+                busca: { id: '', nome: '' }
             }
         },
 
@@ -103,8 +130,10 @@
                         'Authorization': this.token
                     }
                 }
+                
+                let url = this.urlBase + '?' + this.urlFiltro
 
-                axios.get(this.urlBase, config)
+                axios.get(url, config)
                     .then(response =>{
                         this.marcas = response.data
                     })
@@ -143,6 +172,27 @@
                             dados: erros.response.data.errors
                         }
                     })
+            },
+            pesquisar(){
+                let filtro = ''
+
+                for(let chave in this.busca){
+                    
+                    if(this.busca[chave]){
+                        
+                        if(filtro != ''){
+                            filtro += ';'
+                        }
+
+                        filtro += chave + ':like:' + this.busca[chave]
+                    }
+                }
+
+                if(filtro != ''){
+                    this.urlFiltro = 'filtro='+filtro
+                }
+
+                this.carregarLista()
             }
         },
         mounted(){
